@@ -92,8 +92,13 @@ The input variables are:
 +-----------------------------------+-----------------------------------------------------------------------------------------+---------------------------------------+
 
 ```{r loadInputData}
-#read in simulated data
-sim_data <- fread("sim_data.csv")
+#read in simulated data or generate new data if not available
+if(file.exists("sim_data.csv")){
+  sim_data <- fread("sim_data.csv")
+}else{
+  source("generate_sim_data.R")
+}
+
 
 #define prediction variables
 pred_vars <- c("GESCHL","GEBSTAAT_OE", "STAATB_OE", "EDU_HAB_NAT","age",

@@ -511,8 +511,13 @@ tourists in your place of residence?”</p>
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>#read in simulated data
-sim_data &lt;- fread(&quot;sim_data.csv&quot;)
+<pre class="r"><code>#read in simulated data or generate new data if not available
+if(file.exists(&quot;sim_data.csv&quot;)){
+  sim_data &lt;- fread(&quot;sim_data.csv&quot;)
+}else{
+  source(&quot;generate_sim_data.R&quot;)
+}
+
 
 #define prediction variables
 pred_vars &lt;- c(&quot;GESCHL&quot;,&quot;GEBSTAAT_OE&quot;, &quot;STAATB_OE&quot;, &quot;EDU_HAB_NAT&quot;,&quot;age&quot;,
@@ -575,10 +580,10 @@ cv_res[which.min(test_error_mean),.(max_depth,eta,min_child_weight,
                                     test_error_std)]</code></pre>
 <pre><code>##    max_depth   eta min_child_weight alpha lambda train_error_mean
 ##        &lt;num&gt; &lt;num&gt;            &lt;num&gt; &lt;num&gt;  &lt;num&gt;            &lt;num&gt;
-## 1:         3  0.01                5     5      5        0.1998419
+## 1:         6  0.02                5     5      5        0.1998059
 ##    test_error_mean test_error_std
 ##              &lt;num&gt;          &lt;num&gt;
-## 1:       0.1973684       0.105919</code></pre>
+## 1:       0.1969006     0.09519519</code></pre>
 <pre class="r"><code>message(paste(&quot;Mininum Test Error:&quot;,round(cv_res[which.min(test_error_mean),test_error_mean],3)))
 min_id &lt;- which.min(cv_res$test_error_mean)
 
@@ -672,9 +677,9 @@ names(area_est) &lt;- c(&quot;areaID&quot;,&quot;estimator_too_many&quot;)
 area_est</code></pre>
 <pre><code>##    areaID estimator_too_many
 ##     &lt;int&gt;              &lt;num&gt;
-## 1:      3          0.1825078
-## 2:      2          0.1739246
-## 3:      1          0.1787847</code></pre>
+## 1:      3          0.1445856
+## 2:      2          0.1579812
+## 3:      1          0.1344472</code></pre>
 <p>Next we draw the bootstrap samples (100). <code>bw</code> is a
 data.table containing the origial data of the survey data (input
 variables, weight, ID etc.) for all survey participants, plus 1000
@@ -755,9 +760,9 @@ sd_per_area &lt;- res[,.(&quot;SD_too_many&quot;=sd(prop_too_many)),by=areaID]
 sd_per_area</code></pre>
 <pre><code>##    areaID SD_too_many
 ##     &lt;int&gt;       &lt;num&gt;
-## 1:      3  0.04273349
-## 2:      2  0.04287521
-## 3:      1  0.04401902</code></pre>
+## 1:      3  0.03989115
+## 2:      2  0.03992802
+## 3:      1  0.03858717</code></pre>
 <p>We construct the confidence intervall (CI) by finding the 2.5 and
 97.5-Quantile of the bootstrap estimates.</p>
 <pre class="r"><code>res1 &lt;- dcast(run~areaID,data=res[,(c(&quot;areaID&quot;,&quot;prop_too_many&quot;,&quot;run&quot;)),with=F],
@@ -772,17 +777,17 @@ quant_area[,CI_width:=q97_5-q2_5]
 quant_area</code></pre>
 <pre><code>##    areaID      q2_5     q97_5  CI_width
 ##     &lt;int&gt;     &lt;num&gt;     &lt;num&gt;     &lt;num&gt;
-## 1:      1 0.1964649 0.3707895 0.1743246
-## 2:      2 0.1978262 0.3686261 0.1707999
-## 3:      3 0.1985323 0.3693350 0.1708027</code></pre>
+## 1:      1 0.1770884 0.3374192 0.1603307
+## 2:      2 0.1789760 0.3389141 0.1599380
+## 3:      3 0.1789441 0.3401872 0.1612430</code></pre>
 <pre class="r"><code>area_est &lt;- merge(area_est,quant_area, by=&quot;areaID&quot;)
 area_est</code></pre>
 <pre><code>## Key: &lt;areaID&gt;
 ##    areaID estimator_too_many      q2_5     q97_5  CI_width
 ##     &lt;int&gt;              &lt;num&gt;     &lt;num&gt;     &lt;num&gt;     &lt;num&gt;
-## 1:      1          0.1787847 0.1964649 0.3707895 0.1743246
-## 2:      2          0.1739246 0.1978262 0.3686261 0.1707999
-## 3:      3          0.1825078 0.1985323 0.3693350 0.1708027</code></pre>
+## 1:      1          0.1344472 0.1770884 0.3374192 0.1603307
+## 2:      2          0.1579812 0.1789760 0.3389141 0.1599380
+## 3:      3          0.1445856 0.1789441 0.3401872 0.1612430</code></pre>
 <p>Estimates for areas with a CI&gt;10 are suppressed and will not be
 published.</p>
 <pre class="r"><code>area_est[,error_FLAG:=0]
@@ -807,14 +812,14 @@ area_est</code></pre>
 <pre><code>## Key: &lt;areaID&gt;
 ##    areaID estimator_too_many      q2_5     q97_5  CI_width error_FLAG
 ##     &lt;int&gt;              &lt;num&gt;     &lt;num&gt;     &lt;num&gt;     &lt;num&gt;      &lt;num&gt;
-## 1:      1          0.1787847 0.1964649 0.3707895 0.1743246          1
-## 2:      2          0.1739246 0.1978262 0.3686261 0.1707999          1
-## 3:      3          0.1825078 0.1985323 0.3693350 0.1708027          1
+## 1:      1          0.1344472 0.1770884 0.3374192 0.1603307          1
+## 2:      2          0.1579812 0.1789760 0.3389141 0.1599380          1
+## 3:      3          0.1445856 0.1789441 0.3401872 0.1612430          1
 ##    perc_too_many perc_too_many_INT
 ##            &lt;num&gt;            &lt;char&gt;
-## 1:         17.88            11-20%
-## 2:         17.39            11-20%
-## 3:         18.25            11-20%</code></pre>
+## 1:         13.44            11-20%
+## 2:         15.80            11-20%
+## 3:         14.46            11-20%</code></pre>
 </div>
 
 
